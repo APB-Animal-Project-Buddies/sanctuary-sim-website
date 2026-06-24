@@ -141,11 +141,15 @@ function herd(
 const COWS = herd(3, 11, 28, 9, 40, 72);
 const SHEEP = herd(10, 29, 17, 7, 8, 44);
 
-export default function TimeOfDayHero() {
+export default function TimeOfDayHero({
+  initialCount,
+}: {
+  initialCount: number | null;
+}) {
   const [mode, setMode] = useState<Mode>("day");
   const [located, setLocated] = useState(false);
   const [timeLabel, setTimeLabel] = useState("");
-  const [count, setCount] = useState(5142);
+  const [count, setCount] = useState<number | null>(initialCount);
 
   const [state, formAction] = useActionState(joinWaitlist, {
     status: "idle",
@@ -160,9 +164,9 @@ export default function TimeOfDayHero() {
     setTimeLabel(fmtTime(now));
   }, []);
 
-  // Bump the visible count once a signup actually lands.
+  // Optimistically bump the visible count once a signup actually lands.
   useEffect(() => {
-    if (state.status === "success") setCount((c) => c + 1);
+    if (state.status === "success") setCount((c) => (c ?? 0) + 1);
   }, [state.status]);
 
   function pick(m: Mode) {
@@ -383,10 +387,12 @@ export default function TimeOfDayHero() {
             )}
           </div>
 
-          <div className="count">
-            <strong>{count.toLocaleString("en-US")}</strong> sanctuary keepers
-            already on the list
-          </div>
+          {count ? (
+            <div className="count">
+              <strong>{count.toLocaleString("en-US")}</strong> sanctuary
+              caretaker{count === 1 ? "" : "s"} already on the list
+            </div>
+          ) : null}
 
           <p className="foot">
             <span aria-hidden>🐾</span> Wildhaven — a cozy animal sanctuary sim.

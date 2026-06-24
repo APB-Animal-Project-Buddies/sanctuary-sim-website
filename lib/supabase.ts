@@ -1,3 +1,4 @@
+import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -20,4 +21,21 @@ export function getServiceClient(): SupabaseClient | null {
   return createClient(url, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+}
+
+/**
+ * Exact number of rows in the waitlist table. Uses a head + count query so no
+ * row data is transferred. Returns null when Supabase isn't configured or the
+ * query fails, so callers can hide the count rather than show a fake number.
+ */
+export async function getWaitlistCount(): Promise<number | null> {
+  const supabase = getServiceClient();
+  if (!supabase) return null;
+
+  const { count, error } = await supabase
+    .from("waitlist")
+    .select("*", { count: "exact", head: true });
+
+  if (error) return null;
+  return count ?? 0;
 }

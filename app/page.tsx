@@ -1,9 +1,15 @@
 import TimeOfDayHero from "./time-of-day-hero";
+import { getWaitlistCount } from "@/lib/supabase";
 
-export default function Home() {
+// Re-fetch the waitlist count at most once a minute.
+export const revalidate = 60;
+
+export default async function Home() {
+  const initialCount = await getWaitlistCount();
+
   return (
     <main className="page">
-      <TimeOfDayHero />
+      <TimeOfDayHero initialCount={initialCount} />
     </main>
   );
 }
