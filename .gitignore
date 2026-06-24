@@ -1,11 +1,20 @@
 node_modules
 .next
-.env.local
-.env
 .DS_Store
 *.log
 .vercel
 next-env.d.ts
+
+# Never commit real credentials (this is a PUBLIC repo).
+# Only *.example templates are tracked; every other env file is ignored.
+.env
+.env.*
+!.env*.example
+
+# Supabase CLI local state (can contain project/connection info)
+supabase/.temp/
+supabase/.branches/
+supabase/.env
 
 # Local design reference (imported mockup) and harness state — not shipped
 design-import/

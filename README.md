@@ -39,6 +39,25 @@ vercel env add SUPABASE_SERVICE_ROLE_KEY
 vercel --prod
 ```
 
+## Database migrations (CI)
+
+Migrations in `supabase/migrations/` are **not** applied automatically by the
+Vercel/Supabase integration. The `.github/workflows/migrate.yml` workflow runs
+`supabase db push` to apply them — on any push to `main` that touches a
+migration, or manually from the **Actions** tab.
+
+It needs three repository secrets (**Settings → Secrets and variables →
+Actions**):
+
+| Secret                  | Where to find it                                            |
+| ----------------------- | ---------------------------------------------------------- |
+| `SUPABASE_ACCESS_TOKEN` | Supabase → Account → Access Tokens                         |
+| `SUPABASE_PROJECT_ID`   | Project ref (Project Settings → General, or the URL slug)  |
+| `SUPABASE_DB_PASSWORD`  | The database password (Project Settings → Database)        |
+
+Until those are set the workflow will no-op/fail harmlessly. For a one-off you
+can still paste `supabase/migrations/0001_waitlist.sql` into the SQL Editor.
+
 ## Project layout
 
 | Path                                   | Purpose                                  |
