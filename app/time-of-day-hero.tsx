@@ -14,22 +14,25 @@ type Mode = "day" | "golden" | "night";
 // Color tokens ported verbatim from the Wildhaven "DC" export.
 const TOKENS: Record<Mode, Record<string, string>> = {
   day: {
-    ink: "#2e3b2f", sub: "#39433a", accent: "#c8714a", kink: "#3f7a4f",
-    kbg: "rgba(251,247,238,.82)", count: "#39433a", cardBg: "#ffffff",
+    ink: "#171b16", sub: "#272d26", accent: "#c8714a", kink: "#3f7a4f",
+    kbg: "rgba(251,247,238,.82)", count: "#272d26", cardBg: "#ffffff",
     cardInk: "#3a261c", fieldBg: "#ffffff", fieldInk: "#2e3b2f",
     fieldBd: "#e6d3bd", btnInk: "#fbf7ee",
+    scrim: "rgba(250,246,237,.58)", glow: "rgba(255,255,255,.7)",
   },
   golden: {
-    ink: "#3a261c", sub: "#4a3022", accent: "#d2613b", kink: "#9a4a23",
-    kbg: "rgba(255,250,240,.78)", count: "#4a3022", cardBg: "rgba(255,250,240,.88)",
+    ink: "#1a130c", sub: "#2c2117", accent: "#d2613b", kink: "#9a4a23",
+    kbg: "rgba(255,250,240,.78)", count: "#2c2117", cardBg: "rgba(255,250,240,.88)",
     cardInk: "#3a261c", fieldBg: "#ffffff", fieldInk: "#3a261c",
     fieldBd: "#e6d3bd", btnInk: "#fff6ec",
+    scrim: "rgba(255,246,233,.55)", glow: "rgba(255,249,240,.65)",
   },
   night: {
     ink: "#eef2f6", sub: "#c2cad6", accent: "#f0b46a", kink: "#dbe3ef",
     kbg: "rgba(20,28,42,.55)", count: "#c2cad6", cardBg: "rgba(18,26,40,.74)",
     cardInk: "#eef2f6", fieldBg: "rgba(255,255,255,.1)", fieldInk: "#eef2f6",
     fieldBd: "rgba(255,255,255,.22)", btnInk: "#1a2336",
+    scrim: "rgba(8,13,24,.6)", glow: "rgba(2,6,14,.65)",
   },
 };
 
@@ -40,30 +43,6 @@ function modeFromHour(h: number): Mode {
   return "night";
 }
 
-function solarElevation(lat: number, _lon: number, date: Date): number {
-  const rad = Math.PI / 180;
-  const start = new Date(date.getFullYear(), 0, 0);
-  const N = Math.floor((date.getTime() - start.getTime()) / 86400000);
-  const decl = 23.45 * Math.sin(rad * (360 / 365) * (284 + N));
-  const lst = date.getHours() + date.getMinutes() / 60;
-  const H = 15 * (lst - 12);
-  return (
-    Math.asin(
-      Math.sin(rad * lat) * Math.sin(rad * decl) +
-        Math.cos(rad * lat) * Math.cos(rad * decl) * Math.cos(rad * H)
-    ) / rad
-  );
-}
-
-function modeFromElev(e: number): Mode {
-  if (e >= 8) return "day";
-  if (e >= -2) return "golden";
-  return "night";
-}
-
-function fmtTime(d: Date): string {
-  return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-}
 
 // Deterministic pseudo-random so SSR and client agree (no hydration mismatch).
 function seeded(seed: number): () => number {
@@ -140,6 +119,22 @@ function herd(
 }
 const COWS = herd(3, 11, 28, 9, 40, 72);
 const SHEEP = herd(10, 29, 17, 7, 8, 44);
+const ROOSTERS = herd(2, 43, 17, 4, 30, 74);
+
+// A few tiny fireflies, lit only at night — each wanders on its own path.
+const FIREFLIES = (() => {
+  const r = seeded(91);
+  return Array.from({ length: 6 }, () => ({
+    left: 10 + r() * 80,
+    top: 48 + r() * 32,
+    delay: r() * 7,
+    dur: 9 + r() * 7,
+    ax: Math.round((r() - 0.5) * 46),
+    ay: Math.round(-6 - r() * 24),
+    bx: Math.round((r() - 0.5) * 46),
+    by: Math.round(-4 - r() * 22),
+  }));
+})();
 
 export default function TimeOfDayHero({
   initialCount,
@@ -147,8 +142,6 @@ export default function TimeOfDayHero({
   initialCount: number | null;
 }) {
   const [mode, setMode] = useState<Mode>("day");
-  const [located, setLocated] = useState(false);
-  const [timeLabel, setTimeLabel] = useState("");
   const [count, setCount] = useState<number | null>(initialCount);
 
   const [state, formAction] = useActionState(joinWaitlist, {
@@ -157,11 +150,9 @@ export default function TimeOfDayHero({
   } as WaitlistState);
   const joined = state.status === "success" || state.status === "already";
 
-  // On mount: pick mode from the local clock.
+  // On mount: pick the scene from the visitor's local clock.
   useEffect(() => {
-    const now = new Date();
-    setMode(modeFromHour(now.getHours()));
-    setTimeLabel(fmtTime(now));
+    setMode(modeFromHour(new Date().getHours()));
   }, []);
 
   // Optimistically bump the visible count once a signup actually lands.
@@ -171,39 +162,11 @@ export default function TimeOfDayHero({
 
   function pick(m: Mode) {
     setMode(m);
-    setLocated(false);
-  }
-
-  function detect() {
-    const now = new Date();
-    const t = fmtTime(now);
-    const finish = (m: Mode) => {
-      setMode(m);
-      setTimeLabel(t);
-      setLocated(true);
-    };
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) =>
-          finish(
-            modeFromElev(
-              solarElevation(pos.coords.latitude, pos.coords.longitude, now)
-            )
-          ),
-        () => finish(modeFromHour(now.getHours())),
-        { timeout: 8000 }
-      );
-    } else {
-      finish(modeFromHour(now.getHours()));
-    }
   }
 
   const tk = TOKENS[mode];
-  const word =
+  const statusLabel =
     mode === "day" ? "Daytime" : mode === "golden" ? "Golden hour" : "Night";
-  const statusLabel = located
-    ? `${word} · ${timeLabel}`
-    : `${word} · preview`;
 
   const cssVars = useMemo(
     () =>
@@ -305,6 +268,42 @@ export default function TimeOfDayHero({
               🐑
             </span>
           ))}
+          {ROOSTERS.map((c, i) => (
+            <span
+              key={`rooster-${i}`}
+              className="beast rooster"
+              style={{
+                left: `${c.left}%`,
+                top: `${c.top}%`,
+                fontSize: c.size,
+                animationDelay: `${c.delay}s`,
+              }}
+            >
+              🐓
+            </span>
+          ))}
+        </div>
+
+        {/* Fireflies — lit only at night */}
+        <div className="fireflies" aria-hidden>
+          {FIREFLIES.map((f, i) => (
+            <span
+              key={i}
+              className="firefly"
+              style={
+                {
+                  left: `${f.left}%`,
+                  top: `${f.top}%`,
+                  animationDelay: `${f.delay}s`,
+                  animationDuration: `${f.dur}s`,
+                  "--ax": `${f.ax}px`,
+                  "--ay": `${f.ay}px`,
+                  "--bx": `${f.bx}px`,
+                  "--by": `${f.by}px`,
+                } as React.CSSProperties
+              }
+            />
+          ))}
         </div>
 
         <div className="legibility" aria-hidden />
@@ -326,9 +325,6 @@ export default function TimeOfDayHero({
                 </button>
               ))}
             </div>
-            <button type="button" className="locate" onClick={detect}>
-              Use my time
-            </button>
           </div>
         </div>
 
@@ -336,12 +332,12 @@ export default function TimeOfDayHero({
         <div className="content">
           <div className="kicker">Wildhaven · Sanctuary Simulator</div>
           <h1 className="headline">
-            Build a refuge that wakes, glows, and sleeps with the world.
+            Learn what sanctuary really means.
           </h1>
           <p className="subhead">
-            Rescue animals, tend the land, and watch your sanctuary breathe
-            through dawn, golden hour, and starlit nights. Be first through the
-            gates.
+            A cozy sim where you learn to care for, love, and protect rescued
+            animals — discover how real sanctuaries work, the trials to
+            overcome, and enjoy the adventure!
           </p>
 
           <div className="card">
