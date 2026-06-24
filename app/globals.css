@@ -370,11 +370,11 @@ body {
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #e8975f;
+  color: var(--ink);
   margin-bottom: 12px;
   text-shadow: 0 1px 3px var(--glow);
 }
-/* Gold kicker at night; lighter orange in day & dusk */
+/* Black in day & dusk; gold at night */
 .mode-night .kicker {
   color: var(--accent);
 }
