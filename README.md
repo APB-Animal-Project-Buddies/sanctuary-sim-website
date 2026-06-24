@@ -1,6 +1,8 @@
 # Sanctuary — Waitlist
 
-A cozy waitlist landing page for **Sanctuary**, a game about caring for rescued animals. Built with Next.js (App Router) + Supabase, ready to deploy on Vercel.
+A cozy waitlist landing page for **Sanctuary**, a game about caring for rescued animals. Built with Next.js (App Router) + Supabase, deployed on Vercel.
+
+**Live:** https://sanctuary-sim-website.vercel.app/
 
 ## Quick start
 
