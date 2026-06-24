@@ -374,9 +374,14 @@ body {
   margin-bottom: 12px;
   text-shadow: 0 1px 3px var(--glow);
 }
-/* Gold kicker at night (stays near-black in day/dusk) */
+/* Kicker accent by scene: black in day, orange at dusk, gold at night */
+.mode-golden .kicker,
 .mode-night .kicker {
   color: var(--accent);
+}
+/* The orange dusk kicker reads cleaner with a dark shadow than a white glow */
+.mode-golden .kicker {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 .headline {
   font-family: "Newsreader", Georgia, serif;
@@ -516,12 +521,11 @@ body {
   82% { transform: rotate(13deg); }
 }
 @keyframes firefly {
-  0% { transform: translate(0, 0); opacity: 0; }
-  20% { opacity: 0.5; }
-  35% { transform: translate(var(--ax, 14px), var(--ay, -12px)); }
-  55% { transform: translate(var(--bx, -10px), var(--by, -18px)); opacity: 0.55; }
-  80% { opacity: 0.15; }
-  100% { transform: translate(0, 0); opacity: 0; }
+  0% { transform: translate(0, 0); opacity: 0.3; }
+  25% { transform: translate(var(--ax, 14px), var(--ay, -12px)); opacity: 0.6; }
+  50% { transform: translate(var(--bx, -10px), var(--by, -18px)); opacity: 0.35; }
+  75% { transform: translate(calc(var(--ax, 14px) * 0.5), var(--by, -18px)); opacity: 0.55; }
+  100% { transform: translate(0, 0); opacity: 0.3; }
 }
 @keyframes twinkle {
   0%, 100% { opacity: 0.35; }

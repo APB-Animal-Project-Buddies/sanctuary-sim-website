@@ -124,16 +124,20 @@ const ROOSTERS = herd(2, 43, 17, 4, 30, 74);
 // A few tiny fireflies, lit only at night — each wanders on its own path.
 const FIREFLIES = (() => {
   const r = seeded(91);
-  return Array.from({ length: 6 }, () => ({
-    left: 10 + r() * 80,
-    top: 48 + r() * 32,
-    delay: r() * 7,
-    dur: 9 + r() * 7,
-    ax: Math.round((r() - 0.5) * 46),
-    ay: Math.round(-6 - r() * 24),
-    bx: Math.round((r() - 0.5) * 46),
-    by: Math.round(-4 - r() * 22),
-  }));
+  return Array.from({ length: 6 }, () => {
+    const dur = 9 + r() * 7;
+    return {
+      left: 10 + r() * 80,
+      top: 48 + r() * 32,
+      dur,
+      // negative delay => each one is already mid-flight on load
+      delay: -(r() * dur),
+      ax: Math.round((r() - 0.5) * 46),
+      ay: Math.round(-6 - r() * 24),
+      bx: Math.round((r() - 0.5) * 46),
+      by: Math.round(-4 - r() * 22),
+    };
+  });
 })();
 
 export default function TimeOfDayHero({
