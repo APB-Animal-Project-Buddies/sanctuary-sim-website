@@ -1,8 +1,8 @@
--- Waitlist table for the Sanctuary Game.
+-- Waitlist table for Sanctuary Sim.
 -- Run this in the Supabase SQL Editor (or via the Supabase CLI) before deploying.
 
 create table if not exists public.waitlist (
-  id          uuid primary key default gen_random_uuid(),
+  id          bigint generated always as identity primary key,
   email       text not null unique,
   created_at  timestamptz not null default now()
 );
